@@ -1,136 +1,90 @@
 # DataCleaningAssignment
 > Coursera: Getting and Cleaning Data - Course Project
 
-run_analysis.R
+My submission for the Getting and Cleaning Data course project.
+
+## run_analysis.R
 
 An R script which creates two tidy datasets:
 1) combined_data, a combined version of the training and test data in the UCI HAR Dataset
 2) summarised_data, which groups and summarises the data in combined_data
 
-## Installing / Getting started
+### combined_data
 
-A quick introduction of the minimal setup you need to get a hello world up &
-running.
+There are four steps to creating combined_data:
 
-```shell
-packagemanager install awesome-project
-awesome-project start
-awesome-project "Do something!"  # prints "Nah."
+* Merge the training and the test sets to create one data set.
+
+The training and test datasets are both large and therefore take a long time to load into R in their entirety. The second step below states that we are only interested in the mean and standard deviation for each measurement. Therefore if we apply a filter to the read.table function to exclude all columns which are not of interest then we can cut down the load times significantly. The script achieves this by passing the vector `var_classes` to the `colClasses` argument of the read.table function (setting a particular `colClass` to `NULL` will exclude that particular column).
+
+```data_training <- read.table("./UCI HAR Dataset/train/X_train.txt", colClasses = var_classes)
+data_test <- read.table("./UCI HAR Dataset/test/X_test.txt", colClasses = var_classes)
+```
+The two datasets are the same shape: each row represents a specific subject/activity/observation vector, each column represents the same measurement variable. Therefore, once they have both been read into R, it is straightforward to merge them using the rbind function.
+
+```combined_data <- rbind(data_training, data_test)```
+
+* Extract only the measurements on the mean and standard deviation for each measurement.
+
+As stated above, the script used the filter `colClasses = var_classes` to extract the measurements of interest when the data are read into R using the read.table function. This significantly simplifies and speeds up the code. 
+
+First, the list of variable names is read into a data frame:
+
+```variable_lookup <- read.table("./UCI HAR Dataset/features.txt")```
+
+The grep function and regular expressions are then used to define two vectors: `cols_incl`, a vector of column indices for columns which are to be included, and `cols_excl`, a vector of column indices for columns which are to be excluded. The regular expression searches for strings containing the characters "mean()" or "std()", the \\ expression is used to escape the parentheses, as these are reserved characters. Setting the grep argument `invert = TRUE` effects the negation.
+
+```var_labels <- variable_lookup$V2
+cols_incl <- grep("mean\\(\\)|std\\(\\)", var_labels)
+cols_excl <- grep("mean\\(\\)|std\\(\\)", var_labels, invert = TRUE)
+var_classes <- character(length(var_labels))
+var_classes[cols_excl] <- "NULL"
+var_classes[cols_incl] <- "real"
 ```
 
-Here you should say what actually happens when you execute the code above.
+* Use descriptive activity names to name the activities in the data set
 
-### Initial Configuration
+First, the activity codes for each observation and the list of activity names are read into three data frames. 
 
-Some projects require initial configuration (e.g. access tokens or keys, `npm i`).
-This is the section where you would document those requirements.
+```activities_training <- read.table("./UCI HAR Dataset/train/y_train.txt")
+activities_test <- read.table("./UCI HAR Dataset/test/y_test.txt")
+activity_lookup <- read.table("./UCI HAR Dataset/activity_labels.txt")
+```
+The dataset's accompanying README.txt implies that there is a one-to-one mapping between the information in the files y_train.txt and y_test.txt to the observations. Given the lack of any common key between these two sets of files, the script assumes that this mapping is based on row number. Therefore rbind is again used to merge the activity codes together, using the same order as for combined_data (i.e. training set followed by test set) 
 
-## Developing
+```combined_activities <- rbind(activities_training, activities_test)```
 
-Here's a brief intro about what a developer must do in order to start developing
-the project further:
+The apply function is then used to iterate through the rows of combined_activities and replace the activity code with the activity name
 
-```shell
-git clone https://github.com/your/awesome-project.git
-cd awesome-project/
-packagemanager install
+```activity_labels <- activity_lookup$V2
+combined_activities <- apply(combined_activities,1,function(x){activity_labels[x]})
 ```
 
-And state what happens step-by-step.
+Finally, the cbind function is used to add combined_activities as a new column at the beginning of combined_data
 
-### Building
+```combined_data <- cbind(combined_activities, combined_data)
+```
+The new field is labelled "ACTIVITY" in the step below.
 
-If your project needs some additional steps for the developer to build the
-project after some code changes, state them here:
+A similar set of steps is also used to add the fields "SUBJECT" and "SOURCE" to combined_data (containing subject and source identifiers respectively).
 
-```shell
-./configure
-make
-make install
+* Appropriately label the data set with descriptive variable names.
+
+The variable names for the observations in combined_data are easily extracted using the `cols_incl` vector used earlier to create the initial data-read filter.
+
+```var_labels <- as.character(var_labels[cols_incl])
 ```
 
-Here again you should state what actually happens when the code above gets
-executed.
+"SOURCE", "SUBJECT" and "ACTIVITY" are added to `var_labels` and the vector is then read into the names attribute of combined_data 
 
-### Deploying / Publishing
-
-In case there's some step you have to take that publishes this project to a
-server, this is the right time to state it.
-
-```shell
-packagemanager deploy awesome-project -s server.com -u username -p password
+```var_labels <- c("SOURCE", "SUBJECT", "ACTIVITY", var_labels)
+names(combined_data) <- var_labels
 ```
 
-And again you'd need to tell what the previous code actually does.
+### summarised_data
 
-## Features
+Standard functions from the dplyr library are used to create summarised_data, a data frame which summarises combined_data using the average of each variable for each activity and each subject.
 
-What's all the bells and whistles this project can perform?
-* What's the main functionality
-* You can also do another thing
-* If you get really randy, you can even do this
-
-## Configuration
-
-Here you should write what are all of the configurations a user can enter when
-using the project.
-
-#### Argument 1
-Type: `String`  
-Default: `'default value'`
-
-State what an argument does and how you can use it. If needed, you can provide
-an example below.
-
-Example:
-```bash
-awesome-project "Some other value"  # Prints "You're nailing this readme!"
+```library(dplyr)
+summarised_data <- combined_data %>% group_by(SOURCE, SUBJECT, ACTIVITY) %>% summarise_all(mean)
 ```
-
-#### Argument 2
-Type: `Number|Boolean`  
-Default: 100
-
-Copy-paste as many of these as you need.
-
-## Contributing
-
-When you publish something open source, one of the greatest motivations is that
-anyone can just jump in and start contributing to your project.
-
-These paragraphs are meant to welcome those kind souls to feel that they are
-needed. You should state something like:
-
-"If you'd like to contribute, please fork the repository and use a feature
-branch. Pull requests are warmly welcome."
-
-If there's anything else the developer needs to know (e.g. the code style
-guide), you should link it here. If there's a lot of things to take into
-consideration, it is common to separate this section to its own file called
-`CONTRIBUTING.md` (or similar). If so, you should say that it exists here.
-
-## Links
-
-Even though this information can be found inside the project on machine-readable
-format like in a .json file, it's good to include a summary of most useful
-links to humans using your project. You can include links like:
-
-- Project homepage: https://your.github.com/awesome-project/
-- Repository: https://github.com/your/awesome-project/
-- Issue tracker: https://github.com/your/awesome-project/issues
-  - In case of sensitive bugs like security vulnerabilities, please contact
-    my@email.com directly instead of using issue tracker. We value your effort
-    to improve the security and privacy of this project!
-- Related projects:
-  - Your other project: https://github.com/your/other-project/
-  - Someone else's project: https://github.com/someones/awesome-project/
-
-
-## Licensing
-
-One really important part: Give your project a proper license. Here you should
-state what the license is and how to find the text version of the license.
-Something like:
-
-"The code in this project is licensed under MIT license."
-
