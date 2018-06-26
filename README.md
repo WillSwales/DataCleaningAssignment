@@ -29,7 +29,7 @@ First, the list of variable names is read into a data frame:
 
 ```variable_lookup <- read.table("./UCI HAR Dataset/features.txt")```
 
-The grep function and regular expressions are then used to define two vectors: `cols_incl`, a vector of column indices for columns which are to be included, and `cols_excl`, a vector of column indices for columns which are to be excluded. The regular expression searches for strings containing the characters "mean()" or "std()", the \\ expression is used to escape the parentheses, as these are reserved characters. Setting the grep argument `invert = TRUE` effects the negation.
+The grep function and regular expressions are then used to define two vectors: `cols_incl`, a vector of column indices for columns which are to be included, and `cols_excl`, a vector of column indices for columns which are to be excluded. The regular expression searches for strings containing the characters "mean()" or "std()", the "\\\\" expression is used to escape the parentheses, as these are reserved characters. Setting the grep argument `invert = TRUE` effects the negation.
 
 ```
 var_labels <- variable_lookup$V2
