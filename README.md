@@ -6,14 +6,14 @@ My submission for the Getting and Cleaning Data course project.
 ## run_analysis.R
 
 An R script which creates two tidy datasets:
-1) combined_data, a combined version of the training and test data in the UCI HAR Dataset
-2) summarised_data, which groups and summarises the data in combined_data
+* combined_data, a combined version of the training and test data in the UCI HAR Dataset
+* summarised_data, which groups and summarises the data in combined_data
 
 ### combined_data
 
 There are four steps to creating combined_data:
 
-* Merge the training and the test sets to create one data set.
+1. Merge the training and the test sets to create one data set.
 
 The training and test datasets are both large and therefore take a long time to load into R in their entirety. The second step below states that we are only interested in the mean and standard deviation for each measurement. Therefore if we apply a filter to the read.table function to exclude all columns which are not of interest then we can cut down the load times significantly. The script achieves this by passing the vector `var_classes` to the `colClasses` argument of the read.table function (setting a particular `colClass` to `NULL` will exclude that particular column).
 
@@ -26,7 +26,7 @@ The two datasets are the same shape: each row represents a specific subject/acti
 
 ```combined_data <- rbind(data_training, data_test)```
 
-* Extract only the measurements on the mean and standard deviation for each measurement.
+2. Extract only the measurements on the mean and standard deviation for each measurement.
 
 As stated above, the script used the filter `colClasses = var_classes` to extract the measurements of interest when the data are read into R using the read.table function. This significantly simplifies and speeds up the code. 
 
@@ -45,7 +45,7 @@ var_classes[cols_excl] <- "NULL"
 var_classes[cols_incl] <- "real"
 ```
 
-* Use descriptive activity names to name the activities in the data set
+3. Use descriptive activity names to name the activities in the data set
 
 First, the activity codes for each observation and the list of activity names are read into three data frames. 
 
@@ -74,7 +74,7 @@ The new field is labelled "ACTIVITY" in the step below.
 
 A similar set of steps is also used to add the fields "SUBJECT" and "SOURCE" to combined_data (containing subject and source identifiers respectively).
 
-* Appropriately label the data set with descriptive variable names.
+4. Appropriately label the data set with descriptive variable names.
 
 The variable names for the observations in combined_data are easily extracted using the `cols_incl` vector used earlier to create the initial data-read filter.
 
