@@ -53,14 +53,16 @@ More information on each feature can be found in the features_info.txt in the ra
 
 ## Tidy data
 
-
+Two tidy datasets have been produced from the raw data:  
+* combined_data, a combined version of the training and test data in the UCI HAR Dataset
+* summarised_data, which groups and summarises the data in combined_data
 
 ### combined_data
 combined_data combines the training and test observation, activity and subject datasets for a subset of features (the mean and standard deviation of each measurement).   
 Each row is a record of observations from the accelerometers per subject per activity. There are 10,299 records in total.    
 Each variable represents an observation (mean or standard deviation) for a particular measure. There are 66 observations for each record.   
 
-## Variables
+#### Variables
 
 The variables are listed in the table below. The number in square brackets at the beginning of each line shows the column index in combined_data for the left-most variable.
 
@@ -126,7 +128,7 @@ std(): Standard deviation
 ...
 ```
 
-### Transformations
+#### Transformations
 
 Transformations performed on the raw data to create combined_data are minimal:   
 
@@ -135,4 +137,13 @@ Transformations performed on the raw data to create combined_data are minimal:
 * Fields containing activity names, subject index and source index are added to the data set.
 * The headers are labelled appropriately with the descriptive variable names shown above.
 
-### 
+### summarised_data
+
+#### Variables
+The variables in summarised_data are identical to the variables in combined_data.
+
+#### Transformations
+Standard functions in the dplyr library have been used to group and summarise the data in combined_data and output the result to summarised_data.
+
+* The data in combined_data are grouped by source, activity and subject (NB the grouping by source is not strictly required, as source is a superset of subject; however it is required for the syntax of the dplyr functions)
+* The grouped data in combined_data are then summarised using the mean function.
