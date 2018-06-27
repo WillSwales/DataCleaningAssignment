@@ -86,6 +86,7 @@ names(combined_data) <- var_labels
 
 Standard functions from the dplyr library are used to create summarised_data, a data frame which summarises combined_data using the average of each variable for each activity and each subject.
 
-```library(dplyr)
+```
+library(dplyr)
 summarised_data <- combined_data %>% group_by(SOURCE, SUBJECT, ACTIVITY) %>% summarise_all(mean)
 ```
